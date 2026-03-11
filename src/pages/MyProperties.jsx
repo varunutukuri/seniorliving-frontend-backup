@@ -10,14 +10,12 @@ export default function MyProperties() {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
 
   const fetchProperties = async () => {
     setLoading(true);
     try {
       const params = {};
       if (search) params.search = search;
-      if (statusFilter) params.status = statusFilter;
       const { data } = await propertyAPI.getMine(params);
       setProperties(data.data?.properties || []);
     } catch (err) {
@@ -27,7 +25,7 @@ export default function MyProperties() {
     }
   };
 
-  useEffect(() => { fetchProperties(); }, [statusFilter]);
+  useEffect(() => { fetchProperties(); }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -51,7 +49,7 @@ export default function MyProperties() {
     type: p.listingType?.toLowerCase() === "sale" ? "buy" : "rent",
     rentPrice: p.rentPrice ? `₹${Number(p.rentPrice).toLocaleString("en-IN")} / month` : null,
     buyPrice: p.buyPrice ? `₹${Number(p.buyPrice).toLocaleString("en-IN")}` : null,
-    image: p.images?.[0]?.url || "/images/placeholder.jpg",
+    image: p.images?.[0]?.url || null,
     beds: p.beds,
     baths: p.baths,
     area: p.area,
@@ -68,7 +66,7 @@ export default function MyProperties() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-2xl font-bold text-slate-800">My Properties</h1>
-            <p className="text-slate-500">Manage your active listings and leads</p>
+            <p className="text-slate-500">Manage your active listings</p>
           </div>
           <button
             onClick={() => navigate("/builder/add-property")}
@@ -90,16 +88,6 @@ export default function MyProperties() {
               className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
             />
           </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none"
-          >
-            <option value="">All Status</option>
-            <option value="ACTIVE">Active</option>
-            <option value="UNDER_REVIEW">Under Review</option>
-            <option value="INACTIVE">Inactive</option>
-          </select>
         </form>
 
         {/* Grid */}
@@ -121,14 +109,6 @@ export default function MyProperties() {
                     property={mapped}
                     onClick={() => navigate(`/property/${p.id}`)}
                   />
-                  {/* Status badge + stats overlay */}
-                  <div className="absolute top-3 left-3 flex gap-1.5">
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
-                      p.status === "ACTIVE" ? "bg-emerald-100 text-emerald-700" :
-                      p.status === "UNDER_REVIEW" ? "bg-amber-100 text-amber-700" :
-                      "bg-slate-100 text-slate-600"
-                    }`}>{p.status?.replace("_", " ")}</span>
-                  </div>
                   <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={(e) => { e.stopPropagation(); handleDelete(p.id); }}
@@ -139,7 +119,6 @@ export default function MyProperties() {
                     </button>
                   </div>
                   <div className="flex gap-4 px-4 py-2 text-xs text-slate-500">
-                    <span>{mapped.leads} lead{mapped.leads !== 1 ? "s" : ""}</span>
                     <span>{mapped.saves} save{mapped.saves !== 1 ? "s" : ""}</span>
                   </div>
                 </div>

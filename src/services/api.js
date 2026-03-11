@@ -139,22 +139,6 @@ export const requestAPI = {
   update: (id, payload) => api.put(`/requests/${id}`, payload),
 };
 
-// ─── CONVERSATIONS / MESSAGES ────────────────────────────
-export const messageAPI = {
-  getConversations: () => api.get("/conversations"),
-  getMessages: (conversationId, params) =>
-    api.get(`/conversations/${conversationId}/messages`, { params }),
-  createConversation: (payload) => api.post("/conversations", payload),
-  sendMessage: (conversationId, payload) =>
-    api.post(`/conversations/${conversationId}/messages`, payload),
-};
-
-// ─── LEADS ───────────────────────────────────────────────
-export const leadAPI = {
-  getAll: () => api.get("/leads"),
-  update: (id, payload) => api.put(`/leads/${id}`, payload),
-};
-
 // ─── ANALYTICS ───────────────────────────────────────────
 export const analyticsAPI = {
   getOverview: () => api.get("/analytics/overview"),
@@ -170,13 +154,6 @@ export const serviceAPI = {
 // ─── PROVIDERS ───────────────────────────────────────────
 export const providerAPI = {
   getById: (id) => api.get(`/providers/${id}`),
-};
-
-// ─── BOOKINGS ────────────────────────────────────────────
-export const bookingAPI = {
-  getAll: (params) => api.get("/bookings", { params }),
-  create: (payload) => api.post("/bookings", payload),
-  update: (id, payload) => api.put(`/bookings/${id}`, payload),
 };
 
 export default api;

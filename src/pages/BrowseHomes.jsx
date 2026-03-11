@@ -4,13 +4,13 @@ import MainLayout from "../components/layout/MainLayout";
 import PropertyCard from "../components/PropertyCard";
 import AdWidget from "../components/common/AdWidget";
 import { useAuth } from "../context/AuthContext";
-import { propertyAPI } from "../services/api";
+import { propertyAPI, savedPropertyAPI } from "../services/api";
 
 import { Search, SlidersHorizontal, ChevronDown, ChevronUp, MapPin, Loader2 } from "lucide-react";
 
 export default function BrowseHomes() {
     const navigate = useNavigate();
-    const { role } = useAuth();
+    const { role, user } = useAuth();
     const [showFilters, setShowFilters] = useState(true);
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -22,14 +22,13 @@ export default function BrowseHomes() {
         minPrice: "",
         maxPrice: "",
         propertyType: "All",
-        listingType: "Rent", // Rent or Buy
     });
 
     const fetchProperties = useCallback(async () => {
         setLoading(true);
         try {
             const params = {
-                listingType: filters.listingType.toUpperCase(),
+                listingType: "RENT",
                 page: pagination.page,
                 limit: 12,
             };
@@ -53,6 +52,39 @@ export default function BrowseHomes() {
         fetchProperties();
     }, [fetchProperties]);
 
+    const [savedIds, setSavedIds] = useState(new Set());
+
+    useEffect(() => {
+        if (!user) return;
+        savedPropertyAPI.getAll()
+            .then((res) => {
+                const ids = new Set(res.data.data.savedProperties.map((s) => s.propertyId));
+                setSavedIds(ids);
+            })
+            .catch(() => {});
+    }, [user]);
+
+    const handleToggleSave = async (propertyId) => {
+        const alreadySaved = savedIds.has(propertyId);
+        setSavedIds((prev) => {
+            const next = new Set(prev);
+            if (alreadySaved) next.delete(propertyId);
+            else next.add(propertyId);
+            return next;
+        });
+        try {
+            if (alreadySaved) await savedPropertyAPI.unsave(propertyId);
+            else await savedPropertyAPI.save(propertyId);
+        } catch {
+            setSavedIds((prev) => {
+                const next = new Set(prev);
+                if (alreadySaved) next.add(propertyId);
+                else next.delete(propertyId);
+                return next;
+            });
+        }
+    };
+
     // Map API property to component-friendly shape
     function mapProperty(p) {
         return {
@@ -63,7 +95,6 @@ export default function BrowseHomes() {
             buyPrice: p.buyPrice ? `₹${(p.buyPrice / 100000).toFixed(p.buyPrice >= 10000000 ? 1 : 0)} ${p.buyPrice >= 10000000 ? "Cr" : "Lakhs"}` : null,
             type: p.listingType?.toLowerCase() === "sale" ? "buy" : "rent",
             image: p.images?.[0]?.url || null,
-            featured: p.featured,
             beds: p.beds,
             baths: p.baths,
             area: p.area,
@@ -104,22 +135,6 @@ export default function BrowseHomes() {
 
                                 {/* Divider */}
                                 <div className="hidden md:block w-px h-8 bg-slate-200 mx-1"></div>
-
-                                {/* Listing Type */}
-                                <div className="bg-slate-100 p-1 rounded-lg flex shrink-0">
-                                    {["Rent", "Buy"].map(type => (
-                                        <button
-                                            key={type}
-                                            onClick={() => setFilters({ ...filters, listingType: type })}
-                                            className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all uppercase tracking-wide ${filters.listingType === type
-                                                    ? "bg-white text-emerald-700 shadow-sm"
-                                                    : "text-slate-500 hover:text-slate-700"
-                                                }`}
-                                        >
-                                            {type}
-                                        </button>
-                                    ))}
-                                </div>
 
                                 {/* Selects */}
                                 <select
@@ -179,6 +194,8 @@ export default function BrowseHomes() {
                                     <PropertyCard
                                         property={property}
                                         onClick={() => navigate(`/property/${property.id}`)}
+                                        isSaved={savedIds.has(property.id)}
+                                        onToggleSave={user ? handleToggleSave : undefined}
                                     />
                                 </div>
                             ))}
@@ -193,7 +210,7 @@ export default function BrowseHomes() {
                                 Try changing your spelling or removing some filters to see more results.
                             </p>
                             <button
-                                onClick={() => setFilters({ location: "", minPrice: "", maxPrice: "", propertyType: "All", listingType: filters.listingType })}
+                                onClick={() => setFilters({ location: "", minPrice: "", maxPrice: "", propertyType: "All" })}
                                 className="text-emerald-600 font-bold text-sm hover:underline"
                             >
                                 Clear All Filters

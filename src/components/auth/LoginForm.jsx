@@ -21,10 +21,8 @@ export default function LoginForm({ role }) {
     try {
       const user = await login(identifier, password);
       const userRole = user.role?.toLowerCase();
-      if (userRole === "builder" || userRole === "owner") {
+      if (userRole === "builder") {
         navigate("/builder-dashboard");
-      } else if (userRole === "family") {
-        navigate("/family-dashboard");
       } else {
         navigate("/senior-dashboard");
       }

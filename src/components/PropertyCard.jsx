@@ -1,11 +1,8 @@
-import { MapPin, Heart, BedDouble, Bath, Square, ArrowRight } from "lucide-react";
+import { MapPin, Heart, BedDouble, Bath, Square, ArrowRight, Building2 } from "lucide-react";
 
-export default function PropertyCard({ property, onClick }) {
+export default function PropertyCard({ property, onClick, isSaved = false, onToggleSave }) {
     // Determine display price
     const price = property.type === "buy" ? property.buyPrice : property.rentPrice || property.price;
-
-    // Use a reliable placeholder service for "real" feeling images if no image provided
-    const bgImage = property.image || `https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80`;
 
     const beds = property.beds || 2;
     const baths = property.baths || 2;
@@ -17,38 +14,28 @@ export default function PropertyCard({ property, onClick }) {
             onClick={onClick}
         >
             {/* IMAGE SECTION (60-65% Height) */}
-            <div className="relative h-64 overflow-hidden">
-                <img
-                    src={bgImage}
-                    alt={property.title}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-
-                {/* Gradient Overlay for Text Visibility (optional, used here for badges mostly) */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-60"></div>
-
-                {/* TOP BADGES */}
-                <div className="absolute top-3 left-3 flex gap-2">
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider backdrop-blur-md shadow-sm ${property.type === 'rent'
-                            ? 'bg-white/90 text-emerald-700'
-                            : 'bg-white/90 text-blue-700'
-                        }`}>
-                        {property.type === 'rent' ? 'For Rent' : 'For Sale'}
-                    </span>
-                    {property.featured && (
-                        <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-400 text-amber-950 shadow-sm">
-                            Featured
-                        </span>
-                    )}
-                </div>
+            <div className="relative h-64 overflow-hidden bg-slate-100">
+                {property.image ? (
+                    <img
+                        src={property.image}
+                        alt={property.title}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
+                        <Building2 className="w-16 h-16 text-slate-300" />
+                    </div>
+                )}
 
                 {/* WISHLIST BUTTON */}
-                <button
-                    className="absolute top-3 right-3 p-2 rounded-full bg-white/90 backdrop-blur-md text-slate-400 hover:text-rose-500 hover:bg-white transition-colors shadow-sm"
-                    onClick={(e) => { e.stopPropagation(); /* Add wishlist logic */ }}
-                >
-                    <Heart className="w-5 h-5" />
-                </button>
+                {onToggleSave && (
+                    <button
+                        className="absolute top-3 right-3 p-2 rounded-full bg-white/90 backdrop-blur-md hover:bg-white transition-colors shadow-sm"
+                        onClick={(e) => { e.stopPropagation(); onToggleSave(property.id); }}
+                    >
+                        <Heart className={`w-5 h-5 transition-colors ${isSaved ? "fill-rose-500 text-rose-500" : "text-slate-400 hover:text-rose-500"}`} />
+                    </button>
+                )}
             </div>
 
             {/* CONTENT SECTION */}

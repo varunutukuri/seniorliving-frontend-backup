@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { propertyAPI, savedPropertyAPI, requestAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
-import { Loader2, MapPin, BedDouble, Bath, Square, Heart, Phone, Calendar, ArrowLeft } from "lucide-react";
+import MainLayout from "../components/layout/MainLayout";
+import { Loader2, MapPin, BedDouble, Bath, Square, Heart, Phone, ArrowLeft } from "lucide-react";
 
 export default function PropertyDetails() {
   const { id } = useParams();
@@ -20,6 +21,18 @@ export default function PropertyDetails() {
       .catch(() => navigate("/browse"))
       .finally(() => setLoading(false));
   }, [id, navigate]);
+
+  // Check if user already has an active callback for this property
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    requestAPI.getAll().then((res) => {
+      const reqs = res.data.data?.requests || [];
+      const active = reqs.find(
+        (r) => r.propertyId === parseInt(id) && ["PENDING", "CONFIRMED"].includes(r.status)
+      );
+      if (active) setRequestSent(true);
+    }).catch(() => {});
+  }, [id, isAuthenticated]);
 
   const handleSave = async () => {
     if (!isAuthenticated) return navigate("/auth");
@@ -47,9 +60,11 @@ export default function PropertyDetails() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
-      </div>
+      <MainLayout role={role}>
+        <div className="flex items-center justify-center py-32">
+          <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
+        </div>
+      </MainLayout>
     );
   }
 
@@ -64,20 +79,16 @@ export default function PropertyDetails() {
   const primaryImage = property.images?.find((i) => i.isPrimary)?.url || property.images?.[0]?.url;
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="bg-white shadow-sm px-8 py-4 flex items-center gap-4">
+    <MainLayout role={role}>
+      <div className="max-w-5xl mx-auto">
+        {/* Back button */}
         <button
           onClick={() => navigate(-1)}
-          className="text-emerald-600 text-lg font-medium flex items-center gap-2"
+          className="flex items-center gap-2 text-emerald-600 font-medium mb-6 hover:text-emerald-700 transition-colors"
         >
           <ArrowLeft className="w-5 h-5" /> Back
         </button>
-        <h1 className="text-2xl font-semibold text-emerald-700">
-          Property Details
-        </h1>
-      </header>
 
-      <main className="max-w-5xl mx-auto px-6 py-8">
         {/* Image */}
         {primaryImage && (
           <div className="rounded-2xl overflow-hidden mb-6 h-80">
@@ -177,23 +188,16 @@ export default function PropertyDetails() {
                 <Heart className="w-5 h-5" /> {saving ? "Saving..." : "Save Property"}
               </button>
               <button
-                onClick={() => handleRequest("VISIT")}
-                disabled={requestSent}
-                className="w-full flex items-center justify-center gap-2 bg-emerald-600 text-white py-3 rounded-xl font-semibold hover:bg-emerald-700 transition-colors disabled:bg-slate-300"
-              >
-                <Calendar className="w-5 h-5" /> {requestSent ? "Request Sent" : "Schedule Visit"}
-              </button>
-              <button
                 onClick={() => handleRequest("CALLBACK")}
                 disabled={requestSent}
                 className="w-full flex items-center justify-center gap-2 bg-slate-800 text-white py-3 rounded-xl font-semibold hover:bg-slate-900 transition-colors disabled:bg-slate-300"
               >
-                <Phone className="w-5 h-5" /> Request Callback
+                <Phone className="w-5 h-5" /> {requestSent ? "Request Sent" : "Request Callback"}
               </button>
             </div>
           )}
         </div>
-      </main>
-    </div>
+      </div>
+    </MainLayout>
   );
 }

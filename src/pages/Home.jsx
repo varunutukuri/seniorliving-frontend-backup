@@ -44,17 +44,17 @@ export default function Home() {
 
                 {/* ROLE BASED CARDS */}
                 <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* FOR FAMILIES */}
+                    {/* FOR SENIORS */}
                     <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200/60 hover:shadow-md transition-shadow group">
                         <div className="w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center mb-6 text-rose-600 group-hover:scale-110 transition-transform">
                             <Heart className="w-6 h-6" />
                         </div>
-                        <h2 className="text-2xl font-bold text-slate-800 mb-2">For Families</h2>
+                        <h2 className="text-2xl font-bold text-slate-800 mb-2">For Seniors</h2>
                         <p className="text-slate-500 mb-6 leading-relaxed">
-                            Find the perfect home for your parents. Track visits, shortlist properties, and communicate with landlords directly.
+                            Find the perfect senior-friendly home. Browse verified listings, save favourites, and schedule visits directly.
                         </p>
                         <button
-                            onClick={() => navigate("/auth?role=family")}
+                            onClick={() => navigate("/auth?role=senior")}
                             className="text-emerald-700 font-semibold flex items-center gap-2 group-hover:gap-3 transition-all"
                         >
                             Start Your Search <ArrowRight className="w-4 h-4" />

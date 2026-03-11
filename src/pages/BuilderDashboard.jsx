@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import MainLayout from "../components/layout/MainLayout";
-import { PlusCircle, Building, Home, Users, Bookmark, Loader2, TrendingUp } from "lucide-react";
+import { PlusCircle, Building, Home, Bookmark, Loader2, TrendingUp } from "lucide-react";
 import { analyticsAPI } from "../services/api";
 
 export default function BuilderDashboard() {
@@ -34,7 +34,7 @@ export default function BuilderDashboard() {
             Builder Dashboard
           </h2>
           <p className="text-slate-500 mt-1">
-            Manage your senior-friendly property listings and leads.
+            Manage your senior-friendly property listings.
           </p>
         </section>
 
@@ -44,11 +44,10 @@ export default function BuilderDashboard() {
             <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
           </div>
         ) : (
-          <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <section className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {[
               { label: "Total Properties", value: summary.totalProperties ?? 0, icon: Home, bg: "bg-emerald-100", text: "text-emerald-700" },
               { label: "Active Listings", value: summary.activeProperties ?? 0, icon: TrendingUp, bg: "bg-blue-100", text: "text-blue-700" },
-              { label: "Total Leads", value: summary.totalLeads ?? 0, icon: Users, bg: "bg-amber-100", text: "text-amber-700" },
               { label: "Saved by Users", value: summary.totalSaved ?? 0, icon: Bookmark, bg: "bg-purple-100", text: "text-purple-700" },
             ].map((s) => (
               <div key={s.label} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
@@ -92,7 +91,7 @@ export default function BuilderDashboard() {
               My Properties
             </h3>
             <p className="text-slate-500 mb-8 leading-relaxed">
-              View and manage your existing listings. Check leads and update availability status.
+              View and manage your existing listings and update availability status.
             </p>
             <button
               onClick={() => navigate("/builder/my-properties")}
@@ -102,36 +101,6 @@ export default function BuilderDashboard() {
             </button>
           </div>
         </section>
-
-        {/* RECENT LEADS */}
-        {stats?.recentLeads?.length > 0 && (
-          <section className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-            <h3 className="text-lg font-bold text-slate-800 mb-4">Recent Leads</h3>
-            <div className="divide-y divide-slate-100">
-              {stats.recentLeads.map((lead) => (
-                <div key={lead.id} className="py-3 flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-700">
-                      {lead.user?.firstName} {lead.user?.lastName}
-                    </p>
-                    <p className="text-xs text-slate-400">
-                      {lead.property?.title} &middot; {lead.type}
-                    </p>
-                  </div>
-                  <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-                    lead.status === "PENDING"
-                      ? "bg-amber-100 text-amber-700"
-                      : lead.status === "COMPLETED"
-                      ? "bg-emerald-100 text-emerald-700"
-                      : "bg-slate-100 text-slate-600"
-                  }`}>
-                    {lead.status}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
       </div>
     </MainLayout>
   );

@@ -4,7 +4,7 @@ import MainLayout from "../components/layout/MainLayout";
 import PropertyCard from "../components/PropertyCard";
 import AdWidget from "../components/common/AdWidget";
 import { MapPin, Loader2 } from "lucide-react";
-import { propertyAPI } from "../services/api";
+import { propertyAPI, savedPropertyAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 
 const mapProperty = (p) => ({
@@ -14,7 +14,7 @@ const mapProperty = (p) => ({
   type: p.listingType?.toLowerCase() === "sale" ? "buy" : "rent",
   rentPrice: p.rentPrice ? `₹${Number(p.rentPrice).toLocaleString("en-IN")} / month` : null,
   buyPrice: p.buyPrice ? `₹${Number(p.buyPrice).toLocaleString("en-IN")}` : null,
-  image: p.images?.[0]?.url || "/images/placeholder.jpg",
+  image: p.images?.[0]?.url || null,
   beds: p.beds,
   baths: p.baths,
   area: p.area,
@@ -22,25 +22,23 @@ const mapProperty = (p) => ({
 });
 
 export default function SeniorDashboard() {
-  const [mode, setMode] = useState("rent");
   const [filters, setFilters] = useState({ city: "", budget: "", type: "All" });
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [savedIds, setSavedIds] = useState(new Set());
   const navigate = useNavigate();
   const { user } = useAuth();
 
   const fetchProperties = useCallback(async () => {
     setLoading(true);
     try {
-      const params = { listingType: mode.toUpperCase() };
+      const params = { listingType: "RENT" };
       if (filters.city) params.city = filters.city;
       if (filters.type !== "All") params.propertyType = filters.type.toUpperCase();
       if (filters.budget) {
-        if (mode === "rent") {
-          if (filters.budget === "low") { params.maxPrice = 20000; }
-          else if (filters.budget === "mid") { params.minPrice = 20000; params.maxPrice = 50000; }
-          else if (filters.budget === "high") { params.minPrice = 50000; }
-        }
+        if (filters.budget === "low") { params.maxPrice = 20000; }
+        else if (filters.budget === "mid") { params.minPrice = 20000; params.maxPrice = 50000; }
+        else if (filters.budget === "high") { params.minPrice = 50000; }
       }
       const { data } = await propertyAPI.getAll(params);
       setProperties((data.data?.properties || []).map(mapProperty));
@@ -49,9 +47,40 @@ export default function SeniorDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [mode, filters]);
+  }, [filters]);
 
   useEffect(() => { fetchProperties(); }, [fetchProperties]);
+
+  useEffect(() => {
+    if (!user) return;
+    savedPropertyAPI.getAll()
+      .then((res) => {
+        const ids = new Set(res.data.data.savedProperties.map((s) => s.propertyId));
+        setSavedIds(ids);
+      })
+      .catch(() => {});
+  }, [user]);
+
+  const handleToggleSave = async (propertyId) => {
+    const alreadySaved = savedIds.has(propertyId);
+    setSavedIds((prev) => {
+      const next = new Set(prev);
+      if (alreadySaved) next.delete(propertyId);
+      else next.add(propertyId);
+      return next;
+    });
+    try {
+      if (alreadySaved) await savedPropertyAPI.unsave(propertyId);
+      else await savedPropertyAPI.save(propertyId);
+    } catch {
+      setSavedIds((prev) => {
+        const next = new Set(prev);
+        if (alreadySaved) next.add(propertyId);
+        else next.delete(propertyId);
+        return next;
+      });
+    }
+  };
 
   return (
     <MainLayout role="senior">
@@ -71,23 +100,6 @@ export default function SeniorDashboard() {
 
         {/* COMPACT FILTER TOOLBAR */}
         <section className="bg-white p-2 rounded-2xl shadow-sm border border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="bg-slate-100 p-1 rounded-xl flex shrink-0 w-full md:w-auto">
-            {["rent", "buy"].map((m) => (
-              <button
-                key={m}
-                onClick={() => setMode(m)}
-                className={`flex-1 md:flex-none px-8 py-2.5 rounded-lg text-sm font-bold uppercase tracking-wide transition-all ${mode === m
-                  ? "bg-white text-emerald-700 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
-                  }`}
-              >
-                {m}
-              </button>
-            ))}
-          </div>
-
-          <div className="hidden md:block w-px h-8 bg-slate-200 mx-2"></div>
-
           <div className="flex flex-col md:flex-row gap-3 w-full">
             <div className="relative group flex-1">
               <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 group-focus-within:text-emerald-600 transition-colors" />
@@ -141,6 +153,8 @@ export default function SeniorDashboard() {
                 key={property.id}
                 property={property}
                 onClick={() => navigate(`/property/${property.id}`)}
+                isSaved={savedIds.has(property.id)}
+                onToggleSave={user ? handleToggleSave : undefined}
               />
             ))}
           </section>

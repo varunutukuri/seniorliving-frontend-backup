@@ -1,9 +1,7 @@
 export default function RoleSelector({ onSelect }) {
   const roles = [
     { id: "senior", label: "Senior Citizen" },
-    { id: "family", label: "Family / Caregiver" },
     { id: "builder", label: "Builder / Company" },
-    { id: "owner", label: "Property Owner" },
   ];
 
   return (

@@ -63,10 +63,8 @@ export default function RegisterForm({ role }) {
       const user = await verifyOTP(formData.mobile, otp);
       setShowOTP(false);
       const userRole = user.role?.toLowerCase();
-      if (userRole === "builder" || userRole === "owner") {
+      if (userRole === "builder") {
         navigate("/builder-dashboard");
-      } else if (userRole === "family") {
-        navigate("/family-dashboard");
       } else {
         navigate("/senior-dashboard");
       }
